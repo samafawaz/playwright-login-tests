@@ -1,66 +1,70 @@
-const { expect } = require('@playwright/test');
-const { test } = require('../fixtures/loginFixture');
-const credentials = require('../testData/credentials.json');
+const { test, expect } = require('@playwright/test')
+const { LoginPage } = require('../pages/LoginPage')
+const credentials = require('../testData/credentials.json')
 
-// Test Case 1: Positive Login Test
-test('Positive login test', async ({ loginPage }) => {
-  // Open the login page
-  await loginPage.goto();
+// test for valid login
+test('Positive login test', async ({ page }) => {
 
-  // Type username and password
-  await loginPage.fillUsername(credentials.validUser.username);
-  await loginPage.fillPassword(credentials.validUser.password);
+    let loginPage = new LoginPage(page)
 
-  // Click submit
-  await loginPage.clickSubmit();
+    // go to the page
+    await loginPage.goto()
 
-  // Verify the URL contains logged-in-successfully
-  await expect(loginPage.page).toHaveURL(/logged-in-successfully/);
+    // type in valid username and password
+    await loginPage.fillUsername(credentials.validUser.username)
+    await loginPage.fillPassword(credentials.validUser.password)
 
-  // Verify success message is shown
-  await expect(loginPage.page.getByText(/Congratulations|successfully logged in/i)).toBeVisible();
+    // click login
+    await loginPage.clickSubmit()
 
-  // Verify Log out button is visible
-  const logoutButton = await loginPage.getLogoutButton();
-  await expect(logoutButton).toBeVisible();
-});
+    // check that the url changed
+    await expect(page).toHaveURL(/logged-in-successfully/)
 
-// Test Case 2: Negative username test
-test('Negative username test', async ({ loginPage }) => {
-  // Open the login page
-  await loginPage.goto();
+    // check that success message shows up
+    await expect(page.getByText(/Congratulations|successfully logged in/i)).toBeVisible()
 
-  // Type wrong username and correct password
-  await loginPage.fillUsername(credentials.invalidUsername.username);
-  await loginPage.fillPassword(credentials.invalidUsername.password);
+    // make sure logout button is there
+    let logoutBtn = await loginPage.getLogoutButton()
+    await expect(logoutBtn).toBeVisible()
+})
 
-  // Click submit
-  await loginPage.clickSubmit();
 
-  // Verify error message is shown
-  const errorMessage = await loginPage.getErrorMessage();
-  await expect(errorMessage).toBeVisible();
+// test for wrong username
+test('Negative username test', async ({ page }) => {
 
-  // Verify error message text
-  await expect(errorMessage).toHaveText('Your username is invalid!');
-});
+    let loginPage = new LoginPage(page)
 
-// Test Case 3: Negative password test
-test('Negative password test', async ({ loginPage }) => {
-  // Open the login page
-  await loginPage.goto();
+    await loginPage.goto()
 
-  // Type correct username and wrong password
-  await loginPage.fillUsername(credentials.invalidPassword.username);
-  await loginPage.fillPassword(credentials.invalidPassword.password);
+    await loginPage.fillUsername(credentials.invalidUsername.username)
+    await loginPage.fillPassword(credentials.invalidUsername.password)
 
-  // Click submit
-  await loginPage.clickSubmit();
+    await loginPage.clickSubmit()
 
-  // Verify error message is shown
-  const errorMessage = await loginPage.getErrorMessage();
-  await expect(errorMessage).toBeVisible();
+    // should show an error
+    let errorMessage = await loginPage.getErrorMessage()
+    await expect(errorMessage).toBeVisible()
 
-  // Verify error message text
-  await expect(errorMessage).toHaveText('Your password is invalid!');
-});
+    // check the error text
+    await expect(errorMessage).toHaveText('Your username is invalid!')
+})
+
+
+// test for wrong password
+test('Negative password test', async ({ page }) => {
+
+    let loginPage = new LoginPage(page)
+
+    await loginPage.goto()
+
+    await loginPage.fillUsername(credentials.invalidPassword.username)
+    await loginPage.fillPassword(credentials.invalidPassword.password)
+
+    await loginPage.clickSubmit()
+
+    // error should appear
+    let errorMessage = await loginPage.getErrorMessage()
+    await expect(errorMessage).toBeVisible()
+
+    await expect(errorMessage).toHaveText('Your password is invalid!')
+})
